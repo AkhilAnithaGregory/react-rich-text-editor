@@ -9,11 +9,18 @@ import { LuType } from "react-icons/lu";
 import { BsSubscript, BsSuperscript } from "react-icons/bs";
 import { FaLink } from "react-icons/fa6";
 
-export const RichTextEditor = ({ getValue }) => {
+export const RichTextEditor = ({ getValue, defaultValue = "" }) => {
   const editorRef = useRef(null);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     const editor = editorRef.current;
+
+    if (editor && defaultValue && !hasInitialized.current) {
+      editor.innerHTML = defaultValue;
+      hasInitialized.current = true;
+    }
+
     const handleInput = () => {
       const content = editor.innerHTML;
       getValue(content);
@@ -28,7 +35,7 @@ export const RichTextEditor = ({ getValue }) => {
         editor.removeEventListener("input", handleInput);
       }
     };
-  }, [getValue]);
+  }, [getValue, defaultValue]);
 
   const execCommand = (command, value = null) => {
     document.execCommand(command, false, value);
@@ -44,11 +51,13 @@ export const RichTextEditor = ({ getValue }) => {
 
   const insertLink = () => {
     const url = prompt("Enter the URL");
-    if (url) {
-      execCommand("createLink", url);
+
+    if (url && (url.startsWith("http://") || url.startsWith("https://"))) {
+      document.execCommand("createLink", false, url);
+    } else if (url) {
+      document.execCommand("createLink", false, url);
     }
   };
-
   const setHeading = (level) => {
     execCommand("formatBlock", `<h${level}>`);
   };
@@ -61,6 +70,8 @@ export const RichTextEditor = ({ getValue }) => {
           background: "#ededed",
           borderTopRightRadius: "10px",
           borderTopLeftRadius: "10px",
+          display: "flex",
+          flexWrap: "wrap",
         }}
       >
         <div
@@ -106,6 +117,9 @@ export const RichTextEditor = ({ getValue }) => {
                 height: "100%",
                 paddingTop: "2px",
                 width: "30px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
               onClick={() => execCommand("insertHorizontalRule")}
             >
@@ -127,10 +141,17 @@ export const RichTextEditor = ({ getValue }) => {
               <LiaListAltSolid />
             </button>
           </div>
-          <button style={style.hyperlink} onClick={insertLink}>
-            <FaLink />
-            <span>Hyperlink</span>
-          </button>
+          <div style={{ display: "flex", height: "100%", width: "80px" }}>
+            <div style={style.paletteBorder}>
+              <LuType />
+              <input
+                type="color"
+                defaultValue="#000000"
+                style={style.paletteColor}
+                onChange={(e) => execCommand("foreColor", e.target.value)}
+              />
+            </div>
+          </div>
         </div>
 
         <div
@@ -142,14 +163,16 @@ export const RichTextEditor = ({ getValue }) => {
             marginBottom: "10px",
           }}
         >
-          <div style={{ height: "100%" }}>
+          <div
+            style={{ display: "flex", height: "100%", alignItems: "center" }}
+          >
             <label>Size</label>
             <select
               style={{
                 outline: "none",
                 background: "white",
                 border: "1px solid gray",
-                height: "25px",
+                height: "100%",
                 marginLeft: "10px",
                 width: "52px",
               }}
@@ -191,24 +214,25 @@ export const RichTextEditor = ({ getValue }) => {
           </div>
           <div style={{ display: "flex", height: "100%", width: "80px" }}>
             <div style={style.paletteBorder}>
-              <LuType />
-              <input
-                type="color"
-                style={style.paletteColor}
-                onChange={(e) => execCommand("foreColor", e.target.value)}
-              />
-            </div>
-
-            <div style={style.paletteBorder}>
               <IoMdColorFill />
               <input
                 type="color"
-                value="#ffffff"
+                defaultValue="#ffffff"
                 style={style.paletteColor}
                 onChange={(e) => execCommand("backColor", e.target.value)}
               />
             </div>
           </div>
+        </div>
+        <div
+          style={{
+            height: "30px",
+          }}
+        >
+          <button style={style.hyperlink} onClick={insertLink}>
+            <FaLink />
+            <span>Hyperlink</span>
+          </button>
         </div>
       </div>
 
@@ -231,19 +255,22 @@ export const style = {
   container: {
     border: "1px solid #CCCCCC",
     borderRadius: "10px",
-    minWidth: "400px",
+    minWidth: "320px",
   },
   boxStyle: {
     height: "100%",
     width: "30px",
     background: "white",
     border: "1px solid gray",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   paletteBorder: {
     position: "relative",
     background: "white",
     border: "1px solid gray",
-    width: "50%",
+    width: "38px",
     height: "100%",
     display: "flex",
     flexDirection: "column",
@@ -266,6 +293,7 @@ export const style = {
   hyperlink: {
     alignItems: "center",
     gap: "5px",
+    width: "90px",
     background: "white",
     border: "1px solid gray",
     fontSize: "10px",

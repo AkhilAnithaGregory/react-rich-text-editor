@@ -1,6 +1,6 @@
 {
   "name": "react-text-editor-rte",
-  "version": "1.0.3",
+  "version": "1.0.8",
   "description": "A rich text editor React component with formatting options",
   "main": "index.jsx",
   "scripts": {
